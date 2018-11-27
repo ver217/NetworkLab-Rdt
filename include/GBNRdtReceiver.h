@@ -3,7 +3,7 @@
 #include "../include/RdtReceiver.h"
 class GBNRdtReceiver : public RdtReceiver {
   private:
-    const unsigned int N_BITS;
+    const unsigned int SEQ_MAX;
     int expectSequenceNumberRcvd;   // 期待收到的下一个报文序号
     Packet lastAckPkt;              //上次发送的确认报文
   public:

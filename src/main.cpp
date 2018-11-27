@@ -9,8 +9,8 @@
 
 
 int main() {
-    RdtSender *ps = new GBNRdtSender(4, 4);
-    RdtReceiver * pr = new GBNRdtReceiver(4);
+    auto *ps = new GBNRdtSender(1);
+    auto * pr = new GBNRdtReceiver();
     pns->init();
     pns->setRtdSender(ps);
     pns->setRtdReceiver(pr);
@@ -19,7 +19,7 @@ int main() {
     pns->start();
     delete ps;
     delete pr;
-    delete pUtils;                                  //指向唯一的工具类实例，只在main函数结束前delete
-    delete pns;                                     //指向唯一的模拟网络环境类实例，只在main函数结束前delete
+    //delete pUtils;                                  //指向唯一的工具类实例，只在main函数结束前delete
+    //delete pns;                                     //指向唯一的模拟网络环境类实例，只在main函数结束前delete
     return 0;
 }

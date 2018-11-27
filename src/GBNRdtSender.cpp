@@ -1,63 +1,66 @@
 #include "../include/Base.h"
 #include "../include/Global.h"
+#include "../include/utils.h"
 #include "../include/GBNRdtSender.h"
 
-
 GBNRdtSender::GBNRdtSender(int n, unsigned int seqnum_bits)
-    : N_BITS(seqnum_bits <= 16 ? (1 << seqnum_bits) : (1 << 16)),
+    : SEQ_MAX((seqnum_bits > 0 && seqnum_bits <= 16) ? (1 << seqnum_bits) : (1 << 16)),
       N(n),
       base(0),
       nextSeqnum(0) {
 }
 
-
 GBNRdtSender::~GBNRdtSender() {
 }
 
-Packet GBNRdtSender::make_pkt(int seqNum, char data[Configuration::PAYLOAD_SIZE]) {
-    Packet pkt;
-    pkt.acknum = -1;
-    pkt.seqnum = seqNum;
-    memcpy(pkt.payload, data, Configuration::PAYLOAD_SIZE);
-    pkt.checksum = pUtils->calculateCheckSum(pkt);
-    return pkt;
+bool GBNRdtSender::in_window(int ackNum) {
+    if (base == nextSeqnum)
+        return false;
+    if (base < nextSeqnum)
+        return base <= ackNum && ackNum < nextSeqnum;
+    return !(nextSeqnum <= ackNum && ackNum < base);
 }
 
 bool GBNRdtSender::getWaitingState() {
-    return nextSeqnum == static_cast<int>((base + N) % N_BITS);
+    return nextSeqnum >= static_cast<int>((base + N) % SEQ_MAX);
+    //return static_cast<int>(pkts.size()) >= N;
+    //return false;
 }
 
 bool GBNRdtSender::send(Message &message) {
-    if (getWaitingState())   //发送方处于等待确认状态
+    if (getWaitingState())
         return false;
-    Packet pkt = make_pkt(nextSeqnum, message.data);
-    pkts[nextSeqnum % N] = pkt;
+    Packet pkt = make_data_pkt(nextSeqnum, message.data);
+    pkts.push_back(pkt);
     pUtils->printPacket("发送方发送报文", pkt);
+    pns->sendToNetworkLayer(RECEIVER, pkt);
     if (base == nextSeqnum)
-        pns->startTimer(SENDER, Configuration::TIME_OUT, base);        //启动发送方定时器
-    pns->sendToNetworkLayer(RECEIVER, pkt);                              //调用模拟网络环境的sendToNetworkLayer，通过网络层发送到对方
-    nextSeqnum = (nextSeqnum + 1) % N_BITS;
+        pns->startTimer(SENDER, Configuration::TIME_OUT, 0);
+    nextSeqnum = (nextSeqnum + 1) % SEQ_MAX;
     return true;
 }
 
 void GBNRdtSender::receive(Packet &ackPkt) {
-    //检查校验和是否正确
     int checkSum = pUtils->calculateCheckSum(ackPkt);
-    //如果校验和正确，并且确认序号=发送方已发送并等待确认的数据包序号
-    if (checkSum == ackPkt.checksum) {
+    if (checkSum == ackPkt.checksum && in_window(ackPkt.acknum)) {
+        int base_new = (ackPkt.acknum  + 1) % SEQ_MAX;
         pUtils->printPacket("发送方正确收到确认", ackPkt);
-        pns->stopTimer(SENDER, base);      //关闭定时器
-        base = (ackPkt.acknum + 1) % N_BITS;
+        pns->stopTimer(SENDER, 0);
+        base = base_new;
+        pkts.erase(pkts.begin());
+        cout << "base 向前移动变为" << base << endl;
         if (base != nextSeqnum)
-            pns->startTimer(SENDER, Configuration::TIME_OUT, base);
-    }
+            pns->startTimer(SENDER, Configuration::TIME_OUT, 0);
+    } else
+        pUtils->printPacket("发送方没有正确收到确认", ackPkt);
 }
 
 void GBNRdtSender::timeoutHandler(int seqNum) {
-    pns->stopTimer(SENDER, seqNum);                                     //首先关闭定时器
-    for (int i = base; i < nextSeqnum; i = (i + 1) % N_BITS) {
-        pUtils->printPacket("发送方定时器时间到，重发之前的报文", pkts[seqNum % N]);
-        pns->sendToNetworkLayer(RECEIVER, pkts[seqNum % N]);          //重新发送数据包
+    cout << "发送方定时器时间到，重发最多前N个报文" << endl;
+    pns->stopTimer(SENDER, 0);
+    for (auto pkt : pkts) {
+        pns->sendToNetworkLayer(RECEIVER, pkt);
+        pUtils->printPacket("发之前的报文", pkt);
     }
-    pns->startTimer(SENDER, Configuration::TIME_OUT, seqNum);           //重新启动发送方定时器
+    pns->startTimer(SENDER, Configuration::TIME_OUT, 0);
 }
