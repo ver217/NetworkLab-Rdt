@@ -9,8 +9,8 @@
 
 
 int main() {
-    auto *ps = new GBNRdtSender(1);
-    auto * pr = new GBNRdtReceiver();
+    auto *ps = new GBNRdtSender(4, 3);
+    auto * pr = new GBNRdtReceiver(3);
     pns->init();
     pns->setRtdSender(ps);
     pns->setRtdReceiver(pr);

@@ -13,7 +13,7 @@ GBNRdtSender::GBNRdtSender(int n, unsigned int seqnum_bits)
 GBNRdtSender::~GBNRdtSender() {
 }
 
-bool GBNRdtSender::in_window(int ackNum) {
+inline bool GBNRdtSender::in_window(int ackNum) {
     if (base == nextSeqnum)
         return false;
     if (base < nextSeqnum)
@@ -22,9 +22,7 @@ bool GBNRdtSender::in_window(int ackNum) {
 }
 
 bool GBNRdtSender::getWaitingState() {
-    return nextSeqnum >= static_cast<int>((base + N) % SEQ_MAX);
-    //return static_cast<int>(pkts.size()) >= N;
-    //return false;
+    return static_cast<int>(pkts.size()) >= N;
 }
 
 bool GBNRdtSender::send(Message &message) {
@@ -43,10 +41,11 @@ bool GBNRdtSender::send(Message &message) {
 void GBNRdtSender::receive(Packet &ackPkt) {
     int checkSum = pUtils->calculateCheckSum(ackPkt);
     if (checkSum == ackPkt.checksum && in_window(ackPkt.acknum)) {
-        int base_new = (ackPkt.acknum  + 1) % SEQ_MAX;
+        base = (ackPkt.acknum  + 1) % SEQ_MAX;
         pUtils->printPacket("发送方正确收到确认", ackPkt);
         pns->stopTimer(SENDER, 0);
-        base = base_new;
+        while (ackPkt.acknum != pkts[0].seqnum)
+            pkts.erase(pkts.begin());
         pkts.erase(pkts.begin());
         cout << "base 向前移动变为" << base << endl;
         if (base != nextSeqnum)
