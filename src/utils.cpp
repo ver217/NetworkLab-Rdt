@@ -17,19 +17,3 @@ Packet make_ack_pkt(int ackNum) {
     char data[Configuration::PAYLOAD_SIZE] = "ACK";
     return make_pkt(-1, ackNum, data);
 }
-
-BitMap::BitMap() : bitmap(0) {}
-
-void BitMap::set(int n) {
-    bitmap |= (1 << n);
-}
-
-bool BitMap::has(int n) {
-    return (bitmap >> n) & 1;
-}
-void BitMap::remove(int n) {
-    bitmap &= ~(1 << n);
-}
-void BitMap::clear() {
-    bitmap = 0;
-}
