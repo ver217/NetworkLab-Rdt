@@ -42,17 +42,13 @@ void SRRdtReceiver::receive(Packet &packet) {
     if (checkSum == packet.checksum && in_window(packet.seqnum)) {
         pUtils->printPacket("接收方正确收到发送方的报文", packet);
         //取出Message，向上递交给应用层
-        if (find(cache.begin(), cache.end(), packet) == cache.end())
-            cache.push_back(packet);
+        if (cache.find(packet.seqnum) == cache.end())
+            cache[packet.seqnum] = packet;
         if (packet.seqnum == base) {
-            while (true) {
-                auto iter = cache.cbegin();
-                while (iter != cache.cend() && (*iter).seqnum != base)
-                    ++iter;
-                if (iter == cache.cend())
-                    break;
+            unordered_map<int, Packet>::const_iterator iter;
+            while (!cache.empty() && (iter = cache.find(base)) != cache.end()) {
                 Message msg;
-                memcpy(msg.data, (*iter).payload, sizeof((*iter).payload));
+                memcpy(msg.data, iter->second.payload, sizeof(iter->second.payload));
                 pns->delivertoAppLayer(RECEIVER, msg);
                 cache.erase(iter);
                 base = (base + 1) % SEQ_MAX;

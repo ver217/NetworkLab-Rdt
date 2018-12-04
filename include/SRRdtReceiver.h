@@ -3,13 +3,14 @@
 #include "../include/RdtReceiver.h"
 #include "../include/PacketDocker.h"
 #include <vector>
+#include <unordered_map>
 
 class SRRdtReceiver : public RdtReceiver {
   private:
     const unsigned int SEQ_MAX;
     const int N;
     int base;
-    vector<Packet> cache;   // TODO use map
+    unordered_map<int, Packet> cache;
     vector<Packet> acks;
     inline bool in_window(int seqnum);
     inline bool in_prev_window(int seqnum);
