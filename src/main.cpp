@@ -8,10 +8,12 @@
 #include "../include/GBNRdtReceiver.h"
 #include "../include/SRRdtSender.h"
 #include "../include/SRRdtReceiver.h"
+#include "../include/TCPSender.h"
+#include "../include/TCPReceiver.h"
 
 int main() {
-    auto *ps = new SRRdtSender(4, 3);
-    auto * pr = new SRRdtReceiver(4, 3);
+    auto *ps = new TCPSender(4, 3);
+    auto * pr = new TCPReceiver(4, 3);
     pns->init();
     pns->setRtdSender(ps);
     pns->setRtdReceiver(pr);
