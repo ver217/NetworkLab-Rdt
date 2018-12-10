@@ -28,7 +28,6 @@ void TCPReceiver::receive(Packet &packet) {
     int checkSum = pUtils->calculateCheckSum(packet);
     //如果校验和正确，同时收到报文的序号等于接收方期待收到的报文序号一致
     if (checkSum == packet.checksum && in_window(packet.seqnum)) {
-        pUtils->printPacket("接收方正确收到发送方的报文", packet);
         //取出Message，向上递交给应用层
         if (cache.find(packet.seqnum) == cache.end())
             cache[packet.seqnum] = packet;
@@ -42,6 +41,7 @@ void TCPReceiver::receive(Packet &packet) {
                 lastAckPkt = make_ack_pkt(base);
                 base = (base + 1) % SEQ_MAX;
             }
+            pUtils->printPacket("接收方正确收到发送方的报文", packet);
             pUtils->printPacket("接收方发送确认报文", lastAckPkt);
         } else {
             pUtils->printPacket("接收方没有正确收到发送方的报文,报文序号不对", packet);
