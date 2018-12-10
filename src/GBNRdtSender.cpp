@@ -14,14 +14,6 @@ GBNRdtSender::GBNRdtSender(int n, unsigned int seqnum_bits)
 GBNRdtSender::~GBNRdtSender() {
 }
 
-inline bool GBNRdtSender::in_window(int ackNum) {
-    if (base == nextSeqnum)
-        return false;
-    if (base < nextSeqnum)
-        return base <= ackNum && ackNum < nextSeqnum;
-    return !(nextSeqnum <= ackNum && ackNum < base);
-}
-
 bool GBNRdtSender::getWaitingState() {
     return nextSeqnum == static_cast<int>((base + N) % SEQ_MAX);
 }
@@ -41,7 +33,7 @@ bool GBNRdtSender::send(Message &message) {
 
 void GBNRdtSender::receive(Packet &ackPkt) {
     int checkSum = pUtils->calculateCheckSum(ackPkt);
-    if (checkSum == ackPkt.checksum && in_window(ackPkt.acknum)) {
+    if (checkSum == ackPkt.checksum) {
         base = (ackPkt.acknum  + 1) % SEQ_MAX;
         pUtils->printPacket("发送方正确收到确认", ackPkt);
         pns->stopTimer(SENDER, 0);
