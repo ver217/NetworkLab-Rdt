@@ -43,8 +43,7 @@ void TCPSender::receive(Packet &ackPkt) {
     int checkSum = pUtils->calculateCheckSum(ackPkt);
     if (checkSum == ackPkt.checksum && in_window(ackPkt.acknum)) {
         base = (ackPkt.acknum  + 1) % SEQ_MAX;
-        if (ack_cnt.find(ackPkt.acknum) != ack_cnt.end())
-            ack_cnt[ackPkt.acknum] = 0;
+        ack_cnt = 0;
         pUtils->printPacket("发送方正确收到确认", ackPkt);
         pns->stopTimer(SENDER, 0);
         cout << "base 向前移动变为" << base << endl;
@@ -57,15 +56,12 @@ void TCPSender::receive(Packet &ackPkt) {
             cout << "当前窗口为空，所有包已经确认" << endl;
     } else if (checkSum == ackPkt.checksum) {
         pUtils->printPacket("发送方收到之前的确认", ackPkt);
-        if (ack_cnt.find(ackPkt.acknum) != ack_cnt.end())
-            ++ack_cnt[ackPkt.acknum];
-        else
-            ack_cnt[ackPkt.acknum] = 1;
-        cout << "ACK" << ackPkt.acknum << "计数：" << ack_cnt[ackPkt.acknum] << endl;
-        if (ack_cnt[ackPkt.acknum] == 3) {
+        ++ack_cnt;
+        cout << "ACK" << ackPkt.acknum << "计数：" << ack_cnt << endl;
+        if (ack_cnt == 3) {
             pns->sendToNetworkLayer(RECEIVER, pkts[base % N]);
             pUtils->printPacket("收到3个冗余ACK，快速重传报文", pkts[base % N]);
-            ack_cnt[ackPkt.acknum] = 0;
+            ack_cnt = 0;
         }
     } else
         pUtils->printPacket("发送方没有正确收到确认", ackPkt);

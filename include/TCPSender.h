@@ -2,7 +2,6 @@
 #include "../include/RdtSender.h"
 #include "../include/DataStructure.h"
 #include <vector>
-#include <unordered_map>
 class TCPSender : public RdtSender {
   private:
     const unsigned int SEQ_MAX;
@@ -10,7 +9,7 @@ class TCPSender : public RdtSender {
     int base;
     int nextSeqnum;
     std::vector<Packet> pkts;        //已发送并等待Ack的数据包
-    std::unordered_map<int, int> ack_cnt;
+    int ack_cnt;
     inline bool in_window(int ackNum);
   public:
     bool getWaitingState();
