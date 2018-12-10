@@ -54,13 +54,14 @@ void TCPSender::receive(Packet &ackPkt) {
         } else
             cout << "当前窗口为空，所有包已经确认" << endl;
     } else if (checkSum == ackPkt.checksum) {
+        pUtils->printPacket("发送方收到之前的确认", ackPkt);
         if (ack_cnt.find(ackPkt.acknum) != ack_cnt.end())
             ++ack_cnt[ackPkt.acknum];
         else
             ack_cnt[ackPkt.acknum] = 1;
         if (ack_cnt[ackPkt.acknum] == 3) {
             pns->sendToNetworkLayer(RECEIVER, pkts[base % N]);
-            pUtils->printPacket("收到冗余ACK，快速重传报文", pkts[base % N]);
+            pUtils->printPacket("收到3个冗余ACK，快速重传报文", pkts[base % N]);
             ack_cnt[ackPkt.acknum] = 0;
         }
     } else
