@@ -36,6 +36,7 @@ bool TCPSender::send(Message &message) {
     if (base == nextSeqnum)
         pns->startTimer(SENDER, Configuration::TIME_OUT, 0);
     nextSeqnum = (nextSeqnum + 1) % SEQ_MAX;
+    cout << "现在的状态: " << getWaitingState() << endl;
     return true;
 }
 
@@ -47,13 +48,15 @@ void TCPSender::receive(Packet &ackPkt) {
         pUtils->printPacket("发送方正确收到确认", ackPkt);
         pns->stopTimer(SENDER, 0);
         cout << "base 向前移动变为" << base << endl;
+        cout << "窗口变为[" << base << "," << (base + N) % SEQ_MAX << "]" << endl;
         if (base != nextSeqnum) {
             pns->startTimer(SENDER, Configuration::TIME_OUT, 0);
-            cout << "当前窗口不为空，打印出当前窗口内容" << endl;
-            for (int i = base; i != nextSeqnum; i = (i + 1) % SEQ_MAX)
-                pUtils->printPacket("当前窗口的内容", pkts[i % N]);
-        } else
-            cout << "当前窗口为空，所有包已经确认" << endl;
+            //cout << "当前窗口不为空，打印出当前窗口内容" << endl;
+            //for (int i = base; i != nextSeqnum; i = (i + 1) % SEQ_MAX)
+            //pUtils->printPacket("当前窗口的内容", pkts[i % N]);
+        }
+        //}else
+        //cout << "当前窗口为空，所有包已经确认" << endl;
     } else if (checkSum == ackPkt.checksum) {
         pUtils->printPacket("发送方收到之前的确认", ackPkt);
         ++ack_cnt;

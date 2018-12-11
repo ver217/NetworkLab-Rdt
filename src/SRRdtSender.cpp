@@ -35,6 +35,7 @@ bool SRRdtSender::send(Message &message) {
     pns->sendToNetworkLayer(RECEIVER, pkt);
     pns->startTimer(SENDER, Configuration::TIME_OUT, nextSeqnum);
     nextSeqnum = (nextSeqnum + 1) % SEQ_MAX;
+    cout << "现在的状态: " << getWaitingState() << endl;
     return true;
 }
 
@@ -48,15 +49,10 @@ void SRRdtSender::receive(Packet &ackPkt) {
             while (base != nextSeqnum && pktds[base % N].is_ack)
                 base = (base + 1) % SEQ_MAX;
             cout << "base 向前移动变为" << base << endl;
-            if (base != nextSeqnum) {
-                cout << "当前窗口不为空，打印出当前窗口内容" << endl;
-                for (int i = base; i != nextSeqnum; i = (i + 1) % SEQ_MAX)
-                    pUtils->printPacket("当前窗口的内容", pktds[i % N].pkt);
-            } else
-                cout << "当前窗口为空，所有包已经确认" << endl;
-        }
-    } else
-        pUtils->printPacket("发送方没有正确收到确认", ackPkt);
+            cout << "窗口变为[" << base << "," << (base + N) % SEQ_MAX << "]" << endl;
+        } else
+            pUtils->printPacket("发送方没有正确收到确认", ackPkt);
+    }
 }
 
 void SRRdtSender::timeoutHandler(int seqNum) {
