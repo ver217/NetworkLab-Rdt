@@ -1,7 +1,11 @@
 # Complile
+```
 cmake . -DPROJECT:STRING=$project
+
 $project can be GBN, SR, TCP, stop\_wait
+
 make
+```
 
 # Run
 ./bin/GBN
