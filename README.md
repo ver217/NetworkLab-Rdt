@@ -1,4 +1,4 @@
-# Complile
+# Compile
 ```
 cmake . -DPROJECT:STRING=$project
 
@@ -9,6 +9,9 @@ make
 
 # Run
 ./bin/GBN
+
 ./bin/SR
+
 ./bin/TCP
+
 ./bin/stop\_wait
