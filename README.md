@@ -2,7 +2,7 @@
 ```
 cmake . -DPROJECT:STRING=$project
 
-$project can be GBN, SR, TCP, stop\_wait
+$project can be GBN, SR, TCP, stop_wait
 
 make
 ```
